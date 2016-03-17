@@ -1,0 +1,401 @@
+<html>
+<head>
+	<title>Vcompare</title>
+	<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+	<link rel="stylesheet" type="text/css" href="codemirror/lib/codemirror.css">
+	<script type="text/javascript" src="codemirror/lib/codemirror.js"></script>
+	<script type="text/javascript" src="codemirror/mode/javascript/javascript.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="easyui/demo.css">
+    <script type="text/javascript" src="easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+    
+	<style>
+		.compDiff{background-color:EE8800}
+		.compSame{background-color: cyan}
+		.compBank{background-color: FFFFFF}
+		.compHove{background-color: CCCCCC}
+		a{text-decoration:none}
+		.fileList ul,.fileList li{margin:0;padding:0}
+	</style>
+</head>
+
+<body class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'north',split:true" style="height:50px"></div>
+	<div data-options="region:'west',split:true" style="width:250px">
+		<div id="fileTree" class="easyui-tree" data-options="onClick:treeOnClick"></div>
+	</div>
+	<div data-options="region:'center'">
+		<div class="easyui-tabs" data-options="border:false,fit:true">
+			<div title="fileAcrd">
+				<div id="fileAcrd" class="easyui-accordion" data-options="fit:true,onSelect:getFile"></div>
+			</div>
+			<div title="fileTab" id="fileTab">
+				<table style="width:100%;height:100%;display:block">
+					<tr>
+						<td class="file1" valign="top" width="50%"></td>
+						<td class="file2" valign="top" width="50%"></td>
+					</tr>
+				</table>
+			</div>
+			<div title="fileMap" id="fileMap">
+				<table style="width:100%;height:100%;display:block;border-collapse:collapse;" border="1"></table>
+			</div>
+			<div title="mapWrite" id="mapWrite">
+				<textarea style="width:100%;height:100%;resize:none"></textarea>
+			</div>
+			<div title="fileComp" id="fileComp">
+				<table border="1" style="width:100%">
+					<tr><td colspan="2"><input type="button" value="compFile" onclick="compFile()"/><input type="button" value="clearFile" onclick="clearFile()"/><input name="compFile" style="color:red" readonly/><input type="button" value="getMacth" onclick="getMacth()"/></td></tr>
+					<tr class="fileComp">
+						<td valign="top" width="50%"><textarea rows="20" style="width:100%"></textarea></td>
+						<td valign="top" width="50%"><textarea rows="20" style="width:100%"></textarea></td>
+					<tr class="fileCm">
+						<td class="file1" valign="top" width="50%"></td>
+						<td class="file2" valign="top" width="50%"></td>
+					</tr>
+				</table>
+			</div>
+			<div title="sqlBatis" id="sqlBatis">
+				<input type="button" value="sqlParse" onclick="sqlParse()"/><select id="sqls" onchange="sqlChange()"></select><br/><textarea id="sql0" style="width:50%;height:95%;white-space:nowrap"></textarea><textarea id="sql1" style="width:50%;height:95%;white-space:nowrap"></textarea>
+			</div>
+			<div title="fileBrowser" id="fileBrowser">
+				<div id="fileDiv" style="padding:10px;width:600px;border:1px solid red;overflow:auto"><input class="path" type="text" style="width:85%" readonly/><input type="button" value="browseFile" onclick="browseFile()"/><ul class="tree" class="easyui-tree"></ul></div>
+			</div>
+			<div title="folderComparator">
+				<div id="folderComparator">
+					<input type="button" value="folderCompare" onclick="folderCompare()"/>
+					<table width="100%" border="1" style="border-collapse:collapse">
+						<tr><td><input class="fileComp1" type="text" style="width:100%"/></td><td><input class="fileComp2" type="text" style="width:100%"/></td></tr>
+						<tr>
+							<td valign="top"><div id="fileDiv1" style="padding:10px;width:600px;border:0px solid red;overflow:auto"><input class="path" type="text" style="width:85%" readonly/><input type="button" value="browseFile" onclick="browseFile('fileDiv1')"/><ul class="tree" class="easyui-tree"></ul></div></td>
+							<td valign="top"><div id="fileDiv2" style="padding:10px;width:600px;border:0px solid red;overflow:auto"><input class="path" type="text" style="width:85%" readonly/><input type="button" value="browseFile" onclick="browseFile('fileDiv2')"/><ul class="tree" class="easyui-tree"></ul></div></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div title="genPolFile">
+				<input name="columns" type="text" style="width:100%" value="1-6,7-15,16-23,24-28,29-34,35-42,43-52,53-63,64-71,72-75,76-84,85-93,94-102,103-111,112-116,117-118,119-122,123-124,125-127,128-129,130-131,132-138,139-169,170-250,251-263,264-344,345-349,350-357,358-360,361-362,363-366,367-370,371-389,390-391,392-398,399-405,406-412,413-419"/>
+				<input name="names" type="text" style="width:100%" value="xactNo1,pltNo2,vilDt3,vilTime4,vilAddr5,arvDt6,tktNo7,dIDNO8,dBirth9,hold10,rule11,rule12,rule13,rule14,accuseNo15,accuseTP16,kindNo17,closeNo18,counterID19,errStsV20,errStsD21,inUser22,ownerNo23,vehAddr24,driver25,addr26,color27,policeMan28,sprvsnNo29,insure30,vehZip31,drvZip32,vilAddrMandrain33,vilIns34,payment35,payment36,payment37,payment38"/>
+				<input name="genFile" type="text" style="width:100%"/><input type="button" value="genFile1" onclick="genFile1()"/><input type="button" value="genFile2" onclick="genFile2()"/><input type="button" value="wsTest" onclick="wsTest()"/>
+				<div id="genFileDiv">
+					vilTicket<input type="text" name="vilTicket" value="TESTPOL01"/><br/>
+					driverId<input type="text" name="driverId" value="H121463532"/><br/>
+					driverBirthday<input type="text" name="driverBirthday" value="0480404"/><br/>
+					plateNo<input type="text" name="plateNo" value="KS-2869"/><br/>
+					vehKindNo<input type="text" name="vehKindNo" value="1"/><br/>
+					vilDate<input type="text" name="vilDate" value="0990901"/>vilTime<input type="text" name="vilTime" value="0909"/><br/>
+					vilAddressNo<input type="text" name="vilAddressNo" value="2010"/><br/>
+					accuseNo<input type="text" name="accuseNo" value="0107"/><br/>
+					accuseType<input type="text" name="accuseType" value="2"/><br/>
+					arriveDate<input type="text" name="arriveDate" value="0990909"/><br/>
+					rule1No<input type="text" name="rule1No" value="5620001"/><br/>
+					rule2No<input type="text" name="rule2No" value=""/><br/>
+					rule3No<input type="text" name="rule3No" value=""/><br/>
+					rule4No<input type="text" name="rule4No" value=""/><br/>
+					inUserID<input type="text" name="inUserID" value="E0001"/><br/>
+					policeMan<input type="text" name="policeMan" value=""/><br/>
+					sprvnNo<input type="text" name="sprvnNo" value="20"/>
+				</div>
+			</div>
+			<div title="logDiv">
+				<div id="logDiv" style="width:99%;height:100%">
+					<input type="file" name="logFile"/><input type="button" value="logRead" onclick="logRead('logFile')"/>
+					<div class="grid" style="width:100%;height:65%;border:1px solid blue"></div><div class="temp" style="width:100%;height:30%;border:1px solid blue"><textarea style="width:100%;height:100%;white-space:nowrap"></textarea></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'east',split:true" style="width:300px"><div class="fileList"></div></div>
+	<div data-options="region:'south',split:true" style="height:50px">
+		<input type="text" name="mapFile" value="D:\0.road1\2.comp_a1\mapFile.txt" size="80"/>
+		<input type="button" value="treeFile" onclick="treeFile()"/>
+		<input type="button" value="writeMap" onclick="writeMapDialog()"/>
+		<input type="button" value="pasteFile" onclick="pasteFile()"/>
+		<input type="button" value="gitFile" onclick="gitFile()"/>
+		<div id="filePaste" class="easyui-dialog" data-options="title:'filePaste',iconCls:'icon-save',width:500,height:150">
+			<input type="text" name="file" readonly/><br/>
+			<input type="text" name="file1" style="width:100%" readonly/>
+			<input type="text" name="file2" style="width:100%" readonly/>
+			<input type="button" value="pasteFile1" onclick="pasteFile1()"/>
+			<input type="button" value="pasteFile2" onclick="pasteFile2()"/>
+		</div>
+		<div id="writeMapDialog" class="easyui-dialog" data-options="title:'writeMap',iconCls:'icon-save',width:500,height:150" style="padding:20px">
+			確定修改? <input type="button" value="OK" onclick="writeMap()"/><input type="button" value="NO" onclick="$('#writeMapDialog').dialog('close');"/><br/>
+		</div>
+	</div>
+</body>
+<script>
+window.onload=function(){
+	$('.easyui-tabs').tabs('select','fileTab');
+	//treeFile();
+	$('#filePaste,#writeMapDialog').dialog('close');
+}
+function treeFile(){
+$.get('vcompare?action=getMap&map='+$(':input[name="mapFile"]').val(),function(data){$('#mapWrite textarea').val(data);});
+	$('#fileTree').tree('loadData',[]);
+	$.get('vcompare?action=treeFile&map='+$(':input[name="mapFile"]').val(),function(data){
+		$.each(data,function(i,c){$.each(c.children,function(i1,c1){
+			acrdFile(c1.text);
+			$('#fileMap table').append('<tr><td>'+c1.id+'</td><td>'+c1.root+'</td><td style="background-color:'+(c1.compare?'cyan':'yellow')+';cursor:pointer" onclick="treeOnClick({text:this.innerHTML})">'+c1.file+'</td><td style="background-color:'+(c1.exist1?'cyan':'orange')+'">'+c1.path1+'</td><td style="background-color:'+(c1.exist2?'cyan':'orange')+'">'+c1.path2+'</td></tr>');
+		})});
+		$('#fileTree').tree('loadData',data);
+	},'json');
+}
+function acrdFile(title){
+	$('#fileAcrd').accordion('add',{
+		title:title,
+		content:$('#fileTab table').clone().attr('id',title).css('display',''),
+		selected:false
+	});
+}
+function treeOnClick(node){
+	$('.easyui-tabs').tabs('select','fileTab');
+	$('#fileTab td').empty();
+	getFile(node.text);//$('#fileAcrd').accordion('select',node.text);
+	if(node.state)$('#fileTree').tree(node.state=='open'?'collapseAll':'expandAll');
+}
+function getFile(file){
+	var id=$('#fileMap table').find('td').filter(function(){return $(this).html()==file}).prev('td').prev('td').html();
+	if(id)$('#fileTree').tree('select',$('#fileTree').tree('find',id).target);
+	$.post('vcompare',{action:'getFile',file:file},function(data){if(data){
+		$('#fileTree').tree('update',{target:$('#fileTree').tree('getSelected').target,iconCls:(data.exist1 && data.exist2)?data.file1==data.file2?'icon-ok':'icon-no':'icon-cancel'});
+		$('#fileMap table').find('td').filter(function(){return $(this).html()==file}).css('backgroundColor',data.file1==data.file2?'cyan':'yellow').next('td').css('backgroundColor',data.exist1?'cyan':'orange').next('td').css('backgroundColor',data.exist2?'cyan':'orange');
+		compareFile(data.file1,data.file2,file);
+		clearFile();$('#fileComp tr.fileComp textarea').eq(0).val(data.file1);$('#fileComp tr.fileComp textarea').eq(1).val(data.file2);
+		$.post('vcompare',{action:'getFileList',file:file},function(data){
+			$('.fileList').empty();
+			$.each(data,function(i,c){$('<ul></ul>').append($('<li></li>').append('<input type="checkbox"/>').append('<span>'+c+'</span>')).appendTo('.fileList');});
+			$('.fileList :checkbox').click(function(){
+				$('#fileTab td').empty();
+				$(this).parents('.fileList').find('span').css('backgroundColor','white');
+				var $ck = $(this).parents('.fileList').find(':checkbox:checked');
+				if($ck.size()>=2){
+					$ck.prop('checked',false);
+					$(this).prop('checked',true);
+					$ck.eq($ck.size()-1).prop('checked',true);
+					if($(this).parents('.fileList').find(':checkbox:checked').size()<2)$ck.eq($ck.size()-2).prop('checked',true);
+					$ck = $(this).parents('.fileList').find(':checkbox:checked');
+					$.post('vcompare',{action:'getFile2',file:file,file1:$ck.eq(0).parent().children('span').html(),file2:$ck.eq(1).parent().children('span').html()},function(data){
+						$ck.parent().children('span').css('backgroundColor',data.file1==data.file2?'cyan':'yellow');
+						if(!data.exist1)$ck.eq(0).parent().children('span').css('backgroundColor','orange');
+						if(!data.exist2)$ck.eq(1).parent().children('span').css('backgroundColor','orange');
+						compareFile(data.file1,data.file2,file);
+						$('#fileMap table').find('td').filter(function(){return $(this).html()==file}).next('td').html(data.path1).next('td').html(data.path2);
+					},'json');
+				}
+			})
+		},'json');
+	}},'json');
+}
+function compareFile(t1,t2,file){
+	var t1=t1.split('\n');
+	var t2=t2.split('\n');
+	var test=[t1.toString()==t2.toString(),t1.length,t2.length];
+	$.each(t1,function(i){t1[i]=[t1[i],i,0];});
+	$.each(t2,function(i){t2[i]=[t2[i],i,0];});
+	for(var i1=0;i1<t1.length;i1++){
+		var i2=i1-1;
+		while(++i2<t2.length && t1[i1][0]!=t2[i2][0]);
+		if(i2==t2.length)t2.splice(i1,0,['','',0]);
+		else while(i1<i2)t1.splice(i1++,0,['','',0]);
+		if(t1[i1][0]==t2[i1][0]){t1[i1][2]=1;t2[i1][2]=1;}
+	}
+	for(var i=t1.length;i<t2.length;i++)t1.push(['','',0]);
+
+	var s1='',s2='',s3=[],s4=[];
+	$.each(t1,function(i,c){s1+=c[0]+(i<t1.length-1?'\n':'');s3.push([c[1],c[2]]);});
+	$.each(t2,function(i,c){s2+=c[0]+(i<t2.length-1?'\n':'');s4.push([c[1],c[2]]);});
+	var line1=function(line){return t1[line][1]};
+	var line2=function(line){return t2[line][1]};
+	
+	cmFile(s1,$('#fileTab table td.file1'+',#'+file+' td.file1'),line1,s3);
+	cmFile(s2,$('#fileTab table td.file2'+',#'+file+' td.file2'),line2,s4);
+	barFile();
+}
+function cmFile(value,$td,line,mark){
+	$td.each(function(){
+		var $file=$('<div style="width:100%;border:solid 1px blue"></div>').appendTo($(this).empty());
+		var cm=CodeMirror($file[0], {
+			value:value,
+			firstLineNumber:0,
+			readOnly:true,
+			lineNumbers:true,
+			lineNumberFormatter:line
+		});
+		for(var i in mark)if(mark[i][0]!=='' && mark[i][1]!=1)
+			cm.markText({line:i*1,ch:0},{line:i*1},{className:mark[i][0]!==''?mark[i][1]==1?'compSame':'compDiff':'compBank'});
+		$file.find('.CodeMirror-code').each(function(){
+			$(this).children('div').each(function(i){
+				$(this).hover(
+					function(){$(this).parents('table').first().find('.CodeMirror-code').each(function(){$($(this).children('div')[i]).attr('class','compHove');});},
+					function(){$(this).parents('table').first().find('.CodeMirror-code').each(function(){$($(this).children('div')[i]).attr('class','');});}
+				);
+			});
+		});
+	});
+}
+function writeMap(){$.post('vcompare',{action:'writeMap',maps:$('#mapWrite textarea').val()},function(){$.get('vcompare?action=getMap',function(data){$('#mapWrite textarea').val(data);});});$('#writeMapDialog').dialog('close');}
+function pasteFile(){
+	if(!$('#fileTree').tree('getSelected'))return;
+	var file=$('#fileTree').tree('getSelected').text;
+	var $tab=$('#fileMap table').find('td').filter(function(){return $(this).html()==file});
+	var $dg=$('#filePaste').dialog();
+	$dg.find(':input[name$="file"]').val(file);
+	$dg.find(':input[name$="file1"]').val($tab.next('td').html());
+	$dg.find(':input[name$="file2"]').val($tab.next('td').next('td').html());
+}
+function pasteFile1(){$.post('vcompare',{action:'pasteFile1',file:$('#filePaste :input[name$="file"]').val()},function(){treeOnClick({text:$('#filePaste :input[name$="file"]').val()});$('#filePaste').dialog('close');})}
+function pasteFile2(){$.post('vcompare',{action:'pasteFile2',file:$('#filePaste :input[name$="file"]').val()},function(){treeOnClick({text:$('#filePaste :input[name$="file"]').val()});$('#filePaste').dialog('close');})}
+function compFile(){
+	var $text=$('#fileComp tr.fileComp textarea');
+	compareFile($text.eq(0).val(),$text.eq(1).val(),'fileComp');
+	$('#fileComp :input[name$="compFile"]').val($text.eq(0).val()==$text.eq(1).val()?'true':'false');
+}
+function clearFile(){
+	$('#fileComp tr.fileComp textarea').val('');
+	$('#fileComp tr.fileCm td').empty();
+	$('#fileComp :input[name$="compFile"]').val('');
+}
+function cmMatch(value,$td){
+	$td.each(function(){
+		var $file=$('<div style="width:100%;border:solid 1px blue"></div>').appendTo($(this).empty());
+		var cm=CodeMirror($file[0], {
+			value:value,
+			firstLineNumber:0,
+			readOnly:true,
+			lineNumbers:true
+		});
+	});
+}
+function getMacth(){
+	$('.easyui-tabs').tabs('select','fileComp');
+	var $text=$('#fileComp tr.fileComp textarea');
+	$.post('vcompare',{action:'getMatch',sb:$text.eq(0).val()},function(data){cmMatch(data,$('#fileComp td.file1'));});
+	$.post('vcompare',{action:'getMatch',sb:$text.eq(1).val()},function(data){cmMatch(data,$('#fileComp td.file2'));});
+}
+function gitFile(){
+	if(!$('#fileTree').tree('getSelected'))return;
+	var file=$('#fileTree').tree('getSelected').text;
+	$.post('vcompare',{action:'gitFile',file:file},function(){getFile(file);});
+}
+function sqlMap(){
+	var m={},m1={};
+	var sql0=document.getElementById('sql0').value.replace(/\t/g,'').replace(/\n/g,' ').replace(/ +/g,' ');
+	var m2=sql0.match(/<sql.*?>.*?<\/sql>/ig);
+	for(var i in m2)m[m2[i].match(/^<sql.*?>/i)[0].replace(/^<sql.*?id="/i,'').replace(/".*?>$/,'')]=m2[i].replace(/^<sql.*?>/i,'').replace(/<\/sql>$/i,'');
+	var p=["select",'insert','update'];
+	for(var i in p){
+		m2=sql0.match(new RegExp('<'+p[i]+'.*?>.*?<\/'+p[i]+'>','ig'));
+		for(var i1 in m2){
+			var m3=m2[i1].match(new RegExp('^<'+p[i]+'.*?>','i'))[0].replace(new RegExp('^<'+p[i]+'.*?id="','i'),'').replace(/".*?>$/,'');
+			var m4=m2[i1].replace(new RegExp('^<'+p[i]+'.*?>','i'),'').replace(new RegExp('<\/'+p[i]+'>$','i'),'');
+			var m5=m4.match(/<include.+?\/>/ig);
+			for(var i2 in m5)m4=m4.replace(m5[i2],m[m5[i2].replace(/^<include.*?refid="/i,'').replace(/".*?>$/,'')]);
+			m1[m3]=m4.replace(/<if.*?>.*?<\/if>/ig,'').replace(/<foreach.*?>.*?<\/foreach>/ig,'').replace(/#{.*?}/ig,'?').replace(/ +/g,' ').replace(/<!.*?>/g,'').replace(/,/g,',\n');
+			m1[m3]=m1[m3].replace(/from/ig,' \nfrom \n').replace(/and/ig,' \nand').replace(/where/ig,' \nwhere \n').replace(/left/ig,' \nleft');
+		}
+	}
+	return m1;
+}
+function sqlParse(){
+	var m=sqlMap(),m1='',m2='';
+	for(var i in m){
+		m1+='<option>'+i+'</option>';
+		m2+=i+'\n'+m[i]+'\n\n';
+	}
+	document.getElementById('sqls').innerHTML=m1;
+	document.getElementById('sql1').innerHTML=m2;
+}
+function sqlChange(){document.getElementById('sql1').innerHTML=sqlMap()[document.getElementById('sqls').value];}
+function browseFile(fileDiv){
+	fileDiv=fileDiv?fileDiv:'fileDiv';
+	$('#'+fileDiv+' .tree').tree({onClick:function(node){$.get('fileBrowser?node='+node.id,function(data){fileTree(data,node);},'json');}}).tree('loadData',[{id:'/',text:'/'}]);
+	$.get('fileBrowser?node=/',function(data){fileTree(data);},'json');
+	function fileTree(data,node){
+		var $tree = $('#'+fileDiv+' .tree');
+		node = node?node:$tree.tree('getRoot');
+		$.each($tree.tree('getChildren',node.target),function(i,c){$tree.tree('remove',c.target);});
+		$tree.tree('append',{parent:node.target,data:data}).tree('expand',node.target);
+		$('#'+fileDiv+' .path').val(node.id).select();
+	}
+}
+function writeMapDialog(){$('#writeMapDialog').dialog('open');}
+function folderCompare(){
+	var folder1=$('#folderComparator .fileComp1').val($('#fileDiv1 .path').val()).val();
+	var folder2=$('#folderComparator .fileComp2').val($('#fileDiv2 .path').val()).val();
+	var file=folder1.substring(folder1.lastIndexOf('\\'));
+	$.post('folderComparator',{folder1:folder1,folder2:folder2},function(data){
+		$('.easyui-tabs').tabs('select','fileTab');
+		if($('#fileTab tbody tr').size()>1)$('#fileTab tbody tr').eq(0).remove();
+		$('#fileTab tbody').prepend('<tr style="height:10px"><td><span>'+folder1+'</span><br/><input type="text" style="width:100%"/></td><td><span>'+folder2+'</span><br/><input type="text" style="width:100%"/></td></tr>');
+		compareFile(data.file1,data.file2,file);
+		$('#fileTab table td.file1').find('.CodeMirror-code div').each(function(i){
+			$(this).click(function(){
+				var file1=$('#fileTab tbody tr').first().find('span').eq(0).html()+$(this).find('pre').html().replace(/<.+?>/g,'');
+				var file2=$('#fileTab tbody tr').first().find('span').eq(1).html()+$('#fileTab table td.file2').find('.CodeMirror-code div').eq(i).find('pre').html().replace(/<.+?>/g,'');
+				$('#fileTab tbody tr').first().find(':input').eq(0).val(file1);
+				$('#fileTab tbody tr').first().find(':input').eq(1).val(file2);
+				$.post('vcompare',{action:'getFile2f',file1:file1,file2:file2},function(data){compareFile(data.file1,data.file2,file);},'json');
+			});
+		});
+	},'json');
+}
+function genFile1(){
+	var columns = $(':input[name$="columns"]').val().split(',');
+	var names = $(':input[name$="names"]').val().split(',');
+	$('#genFileDiv').empty();
+	$.each(names,function(i,c){$('#genFileDiv').append(c).append($('<input type="text" name="'+c+'"/><br/>'));});
+	$('#genFileDiv :input').change(function(){
+		var genFile='';
+		$('#genFileDiv :input').each(function(i){
+			var val=$(this).val();
+			var range=columns[i].split('-');
+			for(var i1=val.length;i1<range[1]-range[0]+1;i1++)val+=' ';
+			genFile+=val.substring(0,range[1]-range[0]+1);
+		});
+		$(':input[name$="genFile"]').val(genFile);
+	});
+}
+function genFile2(){
+	var columns = $(':input[name$="columns"]').val().split(',');
+	var genFile=$(':input[name="genFile"]').val();
+	var $input=$('#genFileDiv :input');
+	$.each(columns,function(i,c){
+		var range=c.split('-');
+		if(range[1]<=genFile.length)$input.eq(i).val(genFile.substring(range[0]-1,range[1]));
+	});
+}
+function barFile(){
+	$('.fileBar').remove();
+	var $bar = $('<div class="fileBar" style="position:absolute;top:0px;left:0px;width:5px;height:100%;border-right:1px solid red;border-left:1px solid red"></div>').appendTo($('.fileList').parent());
+	var $div = $('#fileTab td.file1 .CodeMirror-code').children('div');
+	var $tab = $('#fileTab');
+	$('#fileTab td.file1,#fileTab td.file2').each(function(){
+		var $div=$(this).find('.CodeMirror-code').children('div');
+		$div.each(function(i){if($(this).find('.compDiff').size())$bar.append($('<div style="position:absolute;width:100%;height:5px;background-color:red;cursor:pointer" alt="'+(i-.5)+'"></div>').css('top',i/$div.size()*$bar.height()));});
+	});
+	$bar.children('div').hover(function(){$tab.scrollTop($(this).attr('alt')*1/$div.size()*$tab[0].scrollHeight);});
+};
+function wsTest(){
+	var obj={url:$('#folderComparator .fileComp1').val()};
+	$('#genFileDiv :input').each(function(){obj[$(this).attr('name')]=$(this).val().trim();});
+	$.post('wsTest',obj,function(data){$('#genFileDiv').append($('<textarea style="width:100%" rows="30"></textarea>').val(data));},'html');
+}
+function logRead(name){var file=$(':input[name="'+name+'"]')[0];if(file.files.length){var reader = new FileReader();reader.readAsText(file.files[0],'UTF-8');reader.onload = function(e){logGrid(this.result);}}}
+function logGrid(data){
+	$('#logDiv .grid').empty();$('#logDiv .temp textarea').val(data);
+	var datas=data.replace(/\\r/g,'').split('\n'),heads=datas[0].split('\t'),columns=[[]],rows=[];
+	$.each(heads,function(i,c){columns[0].push({field:c.trim(),title:c.trim()});});
+	for(var i=0;i<datas.length;i++)
+		if(datas[i]!='' && datas[i].indexOf('writeFileTime')==-1){
+			var o={},r=datas[i].split('\t')
+			$.each(heads,function(i1,c){o[c.trim()]=r[i1];});
+			rows.push(o);
+		}
+	if(rows.length>0)$('<table class="easyui-datagrid"></table>').appendTo($('#logDiv .grid')).datagrid().datagrid({title:name,url:null,queryParams:null,columns:columns,rownumbers:true,singleSelect:false,fitColumns:false,border:true,fit:true}).datagrid('loadData',rows);
+}
+</script>
+</html>
